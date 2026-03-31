@@ -24,11 +24,13 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
-      - name: iOS Paketi Yap
-        run: flet build ios --no-codesign
+      - name: iOS Paketi Yap (IPA)
+        run: |
+          # Flet'e doğrudan ipa yapmasını ve imzalamayı Flutter tarafında atlamasını söylüyoruz
+          flet build ipa --flutter-build-args="--no-codesign"
 
       - name: Dosyayı Hazırla
         uses: actions/upload-artifact@v4
         with:
           name: Mushaf-iOS-Paketi
-          path: build/ios/*.ipa
+          path: build/ipa/*.ipa

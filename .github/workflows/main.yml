@@ -5,9 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    runs-on: macos-14 # En stabil Mac sürümüne sabitledik
     steps:
       - uses: actions/checkout@v4
 
@@ -24,9 +22,13 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
+      - name: Hata Yaması (Connectivity Fix)
+        run: |
+          # Hata veren kütüphaneyi sorunsuz olan 6.0.5 sürümüne zorluyoruz
+          flutter pub add connectivity_plus:6.0.5
+
       - name: iOS Paketi Yap (IPA)
         run: |
-          # Flet'e doğrudan ipa yapmasını ve imzalamayı Flutter tarafında atlamasını söylüyoruz
           flet build ipa --flutter-build-args="--no-codesign"
 
       - name: Dosyayı Hazırla

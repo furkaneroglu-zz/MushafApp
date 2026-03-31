@@ -6,29 +6,32 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: actions/checkout@v4 # v4 yaptık
+      - uses: actions/checkout@v4
 
       - name: Python Kur
-        uses: actions/setup-python@v5 # v5 yaptık
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Flutter Kur
+      - name: Flutter Hazırla
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
 
       - name: Kütüphaneleri Yükle
         run: |
-          pip install -r requirements.txt
+          pip install flet g4f requests
 
       - name: iOS Paketi Yap (IPA)
         run: |
-          flet build ipa --no-signing
-
+          # DİKKAT: --no-signing yerine --no-codesign kullanıyoruz (Yeni sürüm kuralı)
+          flet build ipa --no-codesign
+          
       - name: Dosyayı Hazırla
-        uses: actions/upload-artifact@v4 # İşte hata veren yer burasıydı, v4 yaptık
+        uses: actions/upload-artifact@v4
         with:
           name: Mushaf-iOS-Paketi
           path: build/ipa/*.ipa

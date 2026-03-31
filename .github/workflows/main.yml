@@ -1,0 +1,34 @@
+name: "Mushaf iOS Derleme"
+
+on:
+  workflow_dispatch: # Manuel başlatmak için
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Python Kur
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Flutter Kur
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Kütüphaneleri Yükle
+        run: |
+          pip install -r requirements.txt
+
+      - name: iOS Paketi Yap (IPA)
+        run: |
+          flet build ipa --no-signing
+
+      - name: Dosyayı Hazırla
+        uses: actions/upload-artifact@v3
+        with:
+          name: Mushaf-iOS-Paketi
+          path: build/ipa/*.ipa

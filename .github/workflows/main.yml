@@ -5,8 +5,8 @@ on:
 
 jobs:
   build:
-    # En güçlü ve güncel Mac sunucusu (M1 işlemcili)
-    runs-on: macos-14 
+    # En yeni ve en güçlü Mac (Xcode 16 içerir, hatayı çözme ihtimali en yüksek olan bu)
+    runs-on: macos-15 
     steps:
       - uses: actions/checkout@v4
 
@@ -14,10 +14,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Xcode Seçimi (Kritik Hamle)
-        # Hata veren Xcode 16 yerine, en stabil çalışan Xcode 15'i seçiyoruz
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app
 
       - name: Flutter Hazırla
         uses: subosito/flutter-action@v2
@@ -27,10 +23,20 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
+      - name: Hata Engelleyici (Pubspec Fix)
+        run: |
+          # Flet'in hata yapmasını engellemek için zorunlu bir kural dosyası oluşturuyoruz
+          echo "name: mushaf_app" > pubspec.yaml
+          echo "environment:" >> pubspec.yaml
+          echo "  sdk: '>=3.0.0 <4.0.0'" >> pubspec.yaml
+          echo "dependency_overrides:" >> pubspec.yaml
+          echo "  connectivity_plus: 6.0.5" >> pubspec.yaml
+          echo "  connectivity_plus_platform_interface: 2.0.1" >> pubspec.yaml
+
       - name: iOS Paketi Yap (IPA)
         run: |
-          # En güvenli paketleme komutu
-          flet build ipa --flutter-build-args="--no-codesign"
+          # --verbose ekledik ki her adımı görelim
+          flet build ipa --flutter-build-args="--no-codesign" --verbose
 
       - name: Dosyayı Hazırla
         uses: actions/upload-artifact@v4

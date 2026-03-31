@@ -1,16 +1,16 @@
 name: "Mushaf iOS Derleme"
 
 on:
-  workflow_dispatch: # Manuel başlatmak için
+  workflow_dispatch: 
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4 # v4 yaptık
 
       - name: Python Kur
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # v5 yaptık
         with:
           python-version: '3.11'
 
@@ -28,7 +28,7 @@ jobs:
           flet build ipa --no-signing
 
       - name: Dosyayı Hazırla
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # İşte hata veren yer burasıydı, v4 yaptık
         with:
           name: Mushaf-iOS-Paketi
           path: build/ipa/*.ipa

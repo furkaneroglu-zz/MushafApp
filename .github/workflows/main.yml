@@ -5,7 +5,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14 # En stabil Mac sürümüne sabitledik
+    # macOS-13 kullanarak Xcode'un daha stabil bir sürümünü seçtik
+    runs-on: macos-13 
     steps:
       - uses: actions/checkout@v4
 
@@ -22,13 +23,9 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
-      - name: Hata Yaması (Connectivity Fix)
-        run: |
-          # Hata veren kütüphaneyi sorunsuz olan 6.0.5 sürümüne zorluyoruz
-          flutter pub add connectivity_plus:6.0.5
-
       - name: iOS Paketi Yap (IPA)
         run: |
+          # En sade ve en direkt paketleme komutu
           flet build ipa --flutter-build-args="--no-codesign"
 
       - name: Dosyayı Hazırla

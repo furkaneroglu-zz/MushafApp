@@ -22,16 +22,13 @@ jobs:
           channel: 'stable'
 
       - name: Kütüphaneleri Yükle
-        run: |
-          pip install flet g4f requests
+        run: pip install flet g4f requests
 
-      - name: iOS Paketi Yap (IPA)
-        run: |
-          # DİKKAT: --no-signing yerine --no-codesign kullanıyoruz (Yeni sürüm kuralı)
-          flet build ipa --no-codesign
-          
+      - name: iOS Paketi Yap
+        run: flet build ios --no-codesign
+
       - name: Dosyayı Hazırla
         uses: actions/upload-artifact@v4
         with:
           name: Mushaf-iOS-Paketi
-          path: build/ipa/*.ipa
+          path: build/ios/*.ipa

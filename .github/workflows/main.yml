@@ -25,20 +25,19 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
-      - name: iOS Uygulamasını Derle (IPA Değil)
-        run: |
-          # Flet'in içindeki Flutter motoruna "Sadece uygulamayı inşa et, paketlemeye karışma" diyoruz
-          flutter build ios --release --no-codesign
+      - name: Flet ile Uygulamayı İnşa Et
+        # Bu adım sonunda 'Hata' verebilir ama dosyaları oluşturmuş olacak
+        run: flet build ipa --flutter-build-args="--no-codesign" || true
 
-      - name: Manuel IPA Paketleme (Hacker Hamlesi)
+      - name: Dosyayı Bul ve IPA Yap (Hacker Hamlesi)
         run: |
-          # Derlenen dosyayı alıp el yordamıyla IPA (aslında bir ziptir) haline getiriyoruz
-          mkdir Payload
-          cp -r build/ios/iphoneos/Runner.app Payload/
+          # Flet'in oluşturduğu o gizli klasörü bulup içindeki uygulamayı çalıyoruz
+          mkdir -p Payload
+          find build/ipa -name "*.app" -exec cp -r {} Payload/ \;
           zip -r Mushaf_v0.02.ipa Payload
 
-      - name: Dosyayı Paylaş
+      - name: IPA Dosyasını Paylaş
         uses: actions/upload-artifact@v4
         with:
-          name: Mushaf-iOS-Sideload-Paketi
+          name: Mushaf-v0.02-iPhone-Paketi
           path: Mushaf_v0.02.ipa

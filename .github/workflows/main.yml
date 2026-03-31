@@ -25,7 +25,7 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
-      - name: Truva Atı Sistemini Kur (Hacker Hamlesi)
+      - name: Truva Atı Sistemini Kur (Ditto Fix)
         run: |
           GERCEK_FLUTTER=$(which flutter)
           mkdir -p /tmp/fake_bin
@@ -33,19 +33,22 @@ jobs:
           cat << 'EOF' > /tmp/fake_bin/flutter
           #!/bin/bash
           if [[ "$*" == *"build ipa"* ]]; then
-            echo "🐎 Truva Atı devrede: Apple komutu yakalandı!"
+            echo "🐎 Truva Atı devrede!"
             GERCEK_FLUTTER_PATH="REPLACE_ME"
             $GERCEK_FLUTTER_PATH build ios --release --no-codesign
             
-            echo "📦 Kendi IPA paketimizi yapıyoruz..."
+            echo "📦 Mac usulü (Ditto) ile paketliyoruz..."
             mkdir -p build/ios/ipa
             mkdir -p Payload
             
-            # İŞTE BURAYI DÜZELTTİK: Uygulamanın adı ne olursa olsun bul ve kopyala
-            APP_DOSYASI=$(find build/ios -type d -name "*.app" | head -n 1)
+            # iphoneos klasöründeki gerçek uygulamayı bul
+            APP_DOSYASI=$(find build/ios -type d -name "*.app" | grep "iphoneos" | head -n 1)
             echo "Bulunan Uygulama: $APP_DOSYASI"
             
-            cp -r "$APP_DOSYASI" Payload/
+            # Mac'in özel aracıyla (ditto) içindeki hiçbir şeyi bozmadan kopyala
+            ditto "$APP_DOSYASI" "Payload/$(basename "$APP_DOSYASI")"
+            
+            # Güvenli fermuarlama
             zip -q -r build/ios/ipa/Mushaf_v0.02.ipa Payload
             exit 0
           else

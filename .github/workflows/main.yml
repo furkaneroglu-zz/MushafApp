@@ -5,7 +5,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14 # Stabil sürümde kalalım
+    # En yeni Mac sürümünü (Sequoia) kullanıyoruz
+    runs-on: macos-15 
     steps:
       - uses: actions/checkout@v4
 
@@ -13,6 +14,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Xcode 16 Seç (En Yeni Sözlük)
+        # O hata veren kelimeyi tanıyan tek sürüm bu, zorla seçtiriyoruz
+        run: sudo xcode-select -s /Applications/Xcode_16.1.app
 
       - name: Flutter Hazırla
         uses: subosito/flutter-action@v2
@@ -22,19 +27,9 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
-      - name: Bağımlılıkları Önceden İndir
-        run: |
-          # Projeyi başlatmadan kütüphaneyi indiriyoruz ki ameliyat yapabilelim
-          flutter pub cache add connectivity_plus:6.0.5
-
-      - name: Cerrahi Müdahale (Hata Fix)
-        run: |
-          # Hata veren 'isUltraConstrained' satırını robotun hafızasından siliyoruz
-          find /Users/runner/.pub-cache -name "PathMonitorConnectivityProvider.swift" -exec sed -i '' 's/path.isUltraConstrained/false/g' {} + || true
-
       - name: iOS Paketi Yap (IPA)
         run: |
-          # Paketlemeyi başlatıyoruz
+          # En güncel ve sade komut
           flet build ipa --flutter-build-args="--no-codesign"
 
       - name: Dosyayı Hazırla

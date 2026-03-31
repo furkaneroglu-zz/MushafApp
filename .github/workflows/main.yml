@@ -25,19 +25,29 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
-      - name: Flet ile Uygulamayı İnşa Et
-        # Bu adım sonunda 'Hata' verebilir ama dosyaları oluşturmuş olacak
-        run: flet build ipa --flutter-build-args="--no-codesign" || true
-
-      - name: Dosyayı Bul ve IPA Yap (Hacker Hamlesi)
+      - name: İnşaatı Başlat (Hata Yok Sayılacak)
         run: |
-          # Flet'in oluşturduğu o gizli klasörü bulup içindeki uygulamayı çalıyoruz
+          # Flet'in çalışma alanını kendi kontrolümüzde bir klasöre alıyoruz
+          mkdir -p $GITHUB_WORKSPACE/gizli_mutfak
+          export TMPDIR=$GITHUB_WORKSPACE/gizli_mutfak
+          
+          # Apple "Kimlik ver" diye hata verene kadar çalıştırıyoruz (|| true ile hatayı eziyoruz)
+          flet build ipa --flutter-build-args="--no-codesign" || true
+
+      - name: Dosyayı Çal ve IPA (Zip) Yap
+        run: |
+          # Apple paketlemeyi reddetse de, arka planda hazır olan uygulamayı buluyoruz
+          APP_DOSYASI=$(find $GITHUB_WORKSPACE/gizli_mutfak -type d -name "*.app" | grep -v "Pods" | grep -v "Simulator" | head -n 1)
+          
+          echo "Buldum: $APP_DOSYASI"
+          
+          # Kendimiz manuel olarak IPA paketini yapıyoruz
           mkdir -p Payload
-          find build/ipa -name "*.app" -exec cp -r {} Payload/ \;
+          cp -R "$APP_DOSYASI" Payload/
           zip -r Mushaf_v0.02.ipa Payload
 
-      - name: IPA Dosyasını Paylaş
+      - name: IPA Dosyasını Teslim Et
         uses: actions/upload-artifact@v4
         with:
-          name: Mushaf-v0.02-iPhone-Paketi
+          name: Mushaf-iOS-Final-IPA
           path: Mushaf_v0.02.ipa

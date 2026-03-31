@@ -5,8 +5,7 @@ on:
 
 jobs:
   build:
-    # En yeni ve en güçlü Mac (Xcode 16 içerir, hatayı çözme ihtimali en yüksek olan bu)
-    runs-on: macos-15 
+    runs-on: macos-14 # Stabil sürümde kalalım
     steps:
       - uses: actions/checkout@v4
 
@@ -23,20 +22,20 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
-      - name: Hata Engelleyici (Pubspec Fix)
+      - name: Bağımlılıkları Önceden İndir
         run: |
-          # Flet'in hata yapmasını engellemek için zorunlu bir kural dosyası oluşturuyoruz
-          echo "name: mushaf_app" > pubspec.yaml
-          echo "environment:" >> pubspec.yaml
-          echo "  sdk: '>=3.0.0 <4.0.0'" >> pubspec.yaml
-          echo "dependency_overrides:" >> pubspec.yaml
-          echo "  connectivity_plus: 6.0.5" >> pubspec.yaml
-          echo "  connectivity_plus_platform_interface: 2.0.1" >> pubspec.yaml
+          # Projeyi başlatmadan kütüphaneyi indiriyoruz ki ameliyat yapabilelim
+          flutter pub cache add connectivity_plus:6.0.5
+
+      - name: Cerrahi Müdahale (Hata Fix)
+        run: |
+          # Hata veren 'isUltraConstrained' satırını robotun hafızasından siliyoruz
+          find /Users/runner/.pub-cache -name "PathMonitorConnectivityProvider.swift" -exec sed -i '' 's/path.isUltraConstrained/false/g' {} + || true
 
       - name: iOS Paketi Yap (IPA)
         run: |
-          # --verbose ekledik ki her adımı görelim
-          flet build ipa --flutter-build-args="--no-codesign" --verbose
+          # Paketlemeyi başlatıyoruz
+          flet build ipa --flutter-build-args="--no-codesign"
 
       - name: Dosyayı Hazırla
         uses: actions/upload-artifact@v4

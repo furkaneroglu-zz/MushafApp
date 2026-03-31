@@ -25,29 +25,46 @@ jobs:
       - name: Kütüphaneleri Yükle
         run: pip install flet g4f requests
 
-      - name: İnşaatı Başlat (Hata Yok Sayılacak)
+      - name: Truva Atı Sistemini Kur (Hacker Hamlesi)
         run: |
-          # Flet'in çalışma alanını kendi kontrolümüzde bir klasöre alıyoruz
-          mkdir -p $GITHUB_WORKSPACE/gizli_mutfak
-          export TMPDIR=$GITHUB_WORKSPACE/gizli_mutfak
+          GERCEK_FLUTTER=$(which flutter)
+          mkdir -p /tmp/fake_bin
           
-          # Apple "Kimlik ver" diye hata verene kadar çalıştırıyoruz (|| true ile hatayı eziyoruz)
-          flet build ipa --flutter-build-args="--no-codesign" || true
+          # Sahte kuryemizi yazıyoruz
+          cat << 'EOF' > /tmp/fake_bin/flutter
+          #!/bin/bash
+          if [[ "$*" == *"build ipa"* ]]; then
+            echo "🐎 Truva Atı devrede: Apple komutu yakalandı!"
+            GERCEK_FLUTTER_PATH="REPLACE_ME"
+            # Kimlik sormayan gizli komutu çalıştır
+            $GERCEK_FLUTTER_PATH build ios --release --no-codesign
+            
+            echo "📦 Kendi IPA paketimizi yapıp Flet'e yutturuyoruz..."
+            mkdir -p build/ios/ipa
+            mkdir -p Payload
+            cp -r build/ios/iphoneos/Runner.app Payload/
+            zip -q -r build/ios/ipa/Mushaf_v0.02.ipa Payload
+            exit 0
+          else
+            # Diğer normal komutlara dokunma
+            GERCEK_FLUTTER_PATH="REPLACE_ME"
+            $GERCEK_FLUTTER_PATH "$@"
+          fi
+          EOF
+          
+          # İçine gerçek flutter'ın yolunu gömüyoruz
+          sed -i '' "s|REPLACE_ME|$GERCEK_FLUTTER|g" /tmp/fake_bin/flutter
+          chmod +x /tmp/fake_bin/flutter
+          
+          # Robotun hafızasına bizim sahte kuryeyi birinci sıraya koyuyoruz
+          echo "/tmp/fake_bin" >> $GITHUB_PATH
 
-      - name: Dosyayı Çal ve IPA (Zip) Yap
-        run: |
-          # Apple paketlemeyi reddetse de, arka planda hazır olan uygulamayı buluyoruz
-          APP_DOSYASI=$(find $GITHUB_WORKSPACE/gizli_mutfak -type d -name "*.app" | grep -v "Pods" | grep -v "Simulator" | head -n 1)
-          
-          echo "Buldum: $APP_DOSYASI"
-          
-          # Kendimiz manuel olarak IPA paketini yapıyoruz
-          mkdir -p Payload
-          cp -R "$APP_DOSYASI" Payload/
-          zip -r Mushaf_v0.02.ipa Payload
+      - name: Flet ile Uygulamayı İnşa Et
+        # Flet bu komutu Apple'a gönderdiğini sanacak ama bizim kuryeye verecek
+        run: flet build ipa
 
       - name: IPA Dosyasını Teslim Et
         uses: actions/upload-artifact@v4
         with:
           name: Mushaf-iOS-Final-IPA
-          path: Mushaf_v0.02.ipa
+          path: build/ipa/*.ipa
